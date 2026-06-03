@@ -1,0 +1,30 @@
+# nuScenes raw data (~5GB — never commit this)
+data/nuscenes/
+data/*.parquet
+
+# Model checkpoints (large binary files)
+checkpoints/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Virtual envs
+.env
+venv/
+env/
+
+# VS Code
+.vscode/
+
+# W&B local files
+wandb/
+
+# OS
+.DS_Store
+Thumbs.db

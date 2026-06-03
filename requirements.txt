@@ -1,0 +1,9 @@
+torch>=2.0.0
+nuscenes-devkit
+numpy
+pandas
+pyarrow
+matplotlib>=3.7.0
+imageio>=2.9.0
+wandb
+pyquaternion
