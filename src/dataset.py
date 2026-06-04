@@ -94,7 +94,7 @@ def extract_trajectories(
         for step_idx, s_token in enumerate(sample_tokens):
             for ann_token in nusc.get('sample', s_token)['anns']:
                 ann      = nusc.get('sample_annotation', ann_token)
-                cat_name = nusc.get('category', ann['category_token'])['name']
+                cat_name = ann['category_name']
                 if not any(cat_name.startswith(v) for v in VEHICLE_CATEGORIES):
                     continue
                 inst = ann['instance_token']
