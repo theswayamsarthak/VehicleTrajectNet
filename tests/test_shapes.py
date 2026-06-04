@@ -296,12 +296,19 @@ class TestConfidenceLoss:
         assert loss.ndim == 0, "Confidence loss must be a scalar"
 
     def test_confidence_loss_differentiable(self, future_batch):
-        """Confidence loss must be differentiable w.r.t. log_probs."""
-        pred      = torch.randn(B, K, T, 2)
-        log_probs = torch.randn(B, K, requires_grad=True).log_softmax(dim=-1)
-        loss      = compute_confidence_loss(pred, log_probs, future_batch)
+        """Confidence loss must be differentiable w.r.t. log_probs.
+
+        log_probs is a non-leaf tensor (output of log_softmax), so .grad
+        isn't populated on it directly. We check the LEAF tensor (raw_logits)
+        that it was computed from — that's what PyTorch actually accumulates
+        gradients into during backward().
+        """
+        pred       = torch.randn(B, K, T, 2)
+        raw_logits = torch.randn(B, K, requires_grad=True)   # leaf tensor
+        log_probs  = raw_logits.log_softmax(dim=-1)           # non-leaf
+        loss       = compute_confidence_loss(pred, log_probs, future_batch)
         loss.backward()
-        assert log_probs.grad is not None
+        assert raw_logits.grad is not None, "Gradient must flow to raw logits"
 
     def test_high_confidence_on_best_mode_reduces_loss(self, future_batch):
         """

@@ -244,11 +244,17 @@ class TrajectoryDataset(Dataset):
         self.past_seqs   = []
         self.future_seqs = []
 
-        grouped = df.groupby(['scene_token', 'instance_token', 'window_id'], sort=False)
-        for _, window_df in grouped:
-            window_df = window_df.sort_values('step')
-            past_df   = window_df[window_df['is_past']]
-            future_df = window_df[~window_df['is_past']]
+        # Sort once upfront — avoids repeated sorting inside the loop
+        df = df.sort_values(['scene_token', 'instance_token', 'window_id', 'step']).reset_index(drop=True)
+
+        # Composite key groupby is significantly faster than multi-column groupby
+        df['_key'] = (df['scene_token'] + '_' +
+                      df['instance_token'] + '_' +
+                      df['window_id'].astype(str))
+
+        for key, window_df in df.groupby('_key', sort=False):
+            past_df   = window_df.iloc[:PAST_STEPS]
+            future_df = window_df.iloc[PAST_STEPS:]
 
             if len(past_df) != PAST_STEPS or len(future_df) != FUTURE_STEPS:
                 continue
@@ -283,7 +289,7 @@ class TrajectoryDataset(Dataset):
             ], axis=-1).astype(np.float32)
 
             self.past_seqs.append(torch.from_numpy(past_seq))
-            self.future_seqs.append(torch.from_numpy(future_xy_norm))
+            self.future_seqs.append(torch.from_numpy(future_xy_norm.astype(np.float32)))
 
         print(f"[{split}] {len(self.past_seqs)} trajectory windows loaded.")
 
